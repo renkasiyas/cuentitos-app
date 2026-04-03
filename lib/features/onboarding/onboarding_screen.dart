@@ -512,8 +512,9 @@ class _GoldButtonState extends State<_GoldButton> with SingleTickerProviderState
         curve: Curves.easeOut,
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 18),
-        // ignore: deprecated_member_use
-        transform: Matrix4.translationValues(0.0, _pressed ? -1.0 : 0.0, 0.0)..scale(_pressed ? 0.98 : 1.0, _pressed ? 0.98 : 1.0),
+        transform: Matrix4.diagonal3Values(
+          _pressed ? 0.98 : 1.0, _pressed ? 0.98 : 1.0, 1.0)
+          ..setTranslationRaw(0.0, _pressed ? -1.0 : 0.0, 0.0),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
