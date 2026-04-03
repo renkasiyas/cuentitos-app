@@ -1,4 +1,4 @@
-package mx.cuentitos.cuentitos
+package mx.cuentitos.app
 
 import io.flutter.embedding.android.FlutterActivity
 
