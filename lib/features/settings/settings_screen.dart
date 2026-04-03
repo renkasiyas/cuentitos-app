@@ -171,14 +171,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
 
                     const SizedBox(height: 28),
 
-                    // ── Suscripcion ───────────────────────────────────────────
-                    _SectionHeader('Suscripcion'),
+                    // ── Suscripción ───────────────────────────────────────────
+                    _SectionHeader('Suscripción'),
                     const SizedBox(height: 8),
                     _SettingsCard(
                       children: [
                         _SettingsTile(
                           icon: Icons.star_outline_rounded,
-                          label: tier == 'premium' ? 'Plan Premium' : 'Plan Basico',
+                          label: tier == 'premium' ? 'Plan Premium' : 'Plan Básico',
                           sublabel: tier == 'premium' ? '\$99 MXN / mes' : 'Gratis',
                           onTap: () => context.push('/settings/subscription'),
                         ),
@@ -225,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       children: [
                         _SettingsTile(
                           icon: Icons.info_outline_rounded,
-                          label: 'Version',
+                          label: 'Versión',
                           trailing: Text(
                             '1.0.0',
                             style: GoogleFonts.nunito(
@@ -237,7 +237,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                         _SettingsDivider(),
                         _SettingsTile(
                           icon: Icons.shield_outlined,
-                          label: 'Politica de privacidad',
+                          label: 'Política de privacidad',
                           trailing: Icon(
                             Icons.open_in_new,
                             size: 16,
@@ -752,7 +752,7 @@ class _LogoutButton extends StatelessWidget {
           onPressed: onPressed,
           icon: const Icon(Icons.logout_rounded, size: 20),
           label: Text(
-            'Cerrar sesion',
+            'Cerrar sesión',
             style: GoogleFonts.nunito(
               fontSize: 16,
               fontWeight: FontWeight.w700,

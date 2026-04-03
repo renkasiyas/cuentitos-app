@@ -76,7 +76,7 @@ class TonightScreen extends ConsumerWidget {
                     color: AppColors.warning.withAlpha(200),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
-                      'Sin conexion',
+                      'Sin conexión',
                       style: GoogleFonts.nunito(
                         color: AppColors.skyDeep,
                         fontSize: 13,
@@ -350,7 +350,7 @@ class _NotSubscribedStateState extends State<_NotSubscribedState>
               const _CrescentMoon(size: 80, skyColor: Color(0xFF060810)),
               const SizedBox(height: 32),
               Text(
-                'Suscribete para recibir cuentos',
+                'Suscríbete para recibir cuentos',
                 style: GoogleFonts.fraunces(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -479,7 +479,7 @@ class _GeneratingState extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           Text(
-            'Tu cuento se esta preparando...',
+            'Tu cuento se está preparando...',
             style: GoogleFonts.fraunces(
               fontSize: 20,
               fontWeight: FontWeight.w600,
@@ -530,7 +530,7 @@ class _FailedState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tu cuento llegara pronto.',
+            'Tu cuento llegará pronto.',
             style: GoogleFonts.nunito(
               fontSize: 15,
               color: AppColors.cream.withAlpha(153),
@@ -732,7 +732,7 @@ class _DownloadButton extends StatelessWidget {
         return TextButton.icon(
           onPressed: () => ref.read(downloadProvider.notifier).download(story.id),
           icon: const Icon(Icons.cloud_download),
-          label: const Text('Descargar para leer sin conexion'),
+          label: const Text('Descargar para leer sin conexión'),
         );
 
       case DownloadStatus.downloading:

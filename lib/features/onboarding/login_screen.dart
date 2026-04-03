@@ -151,7 +151,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       setState(() {
         _loadingGoogle = false;
         _error =
-            'Google Sign-In no esta disponible. Usa tu correo electronico.';
+            'Google Sign-In no está disponible. Usa tu correo electrónico.';
       });
     }
   }

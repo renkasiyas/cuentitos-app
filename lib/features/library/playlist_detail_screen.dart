@@ -92,7 +92,7 @@ class _PlaylistDetailBodyState extends ConsumerState<_PlaylistDetailBody> {
               if (_stories.isEmpty) {
                 return Center(
                   child: Text(
-                    'No hay cuentos aqui todavia.',
+                    'No hay cuentos aquí todavía.',
                     style: TextStyle(color: AppColors.cream.withAlpha(128), fontSize: 16),
                   ),
                 );
@@ -160,7 +160,7 @@ class _StoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(
-        story.title ?? 'Sin titulo',
+        story.title ?? 'Sin título',
         style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.cream),
       ),
       subtitle: Text(

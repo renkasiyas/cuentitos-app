@@ -20,7 +20,7 @@ class SubscriptionScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suscripcion'),
+        title: const Text('Suscripción'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -42,7 +42,7 @@ class SubscriptionScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      tier == 'premium' ? 'Plan Premium' : 'Plan Basico',
+                      tier == 'premium' ? 'Plan Premium' : 'Plan Básico',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -83,7 +83,7 @@ class SubscriptionScreen extends ConsumerWidget {
                 foregroundColor: isPremium ? AppColors.cream : AppColors.skyDeep,
               ),
               child: Text(
-                isPremium ? 'Cambiar a Plan Basico' : 'Cambiar a Premium',
+                isPremium ? 'Cambiar a Plan Básico' : 'Cambiar a Premium',
               ),
             ),
             const SizedBox(height: 12),
@@ -97,7 +97,7 @@ class SubscriptionScreen extends ConsumerWidget {
                 backgroundColor: AppColors.success,
                 foregroundColor: AppColors.cream,
               ),
-              child: const Text('Reactivar suscripcion'),
+              child: const Text('Reactivar suscripción'),
             ),
             const SizedBox(height: 12),
           ],
@@ -119,11 +119,11 @@ class SubscriptionScreen extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Cambiar a ${newTier == "premium" ? "Premium" : "Basico"}'),
+        title: Text('Cambiar a ${newTier == "premium" ? "Premium" : "Básico"}'),
         content: Text(
           newTier == 'premium'
-              ? 'Se cambiara tu plan a Premium por $newPrice MXN/mes.'
-              : 'Se cambiara tu plan a Basico. Perderas acceso a audios y funciones premium.',
+              ? 'Se cambiará tu plan a Premium por $newPrice MXN/mes.'
+              : 'Se cambiará tu plan a Básico. Perderás acceso a audios y funciones premium.',
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),

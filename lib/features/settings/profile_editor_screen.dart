@@ -182,7 +182,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
             padding: const EdgeInsets.all(20),
             children: [
               Text(
-                'Informacion del nino',
+                'Información del niño',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.cream.withAlpha(128)),
               ),
               const SizedBox(height: 12),
@@ -191,7 +191,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
                 textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(
                   labelText: 'Nombre',
-                  hintText: 'Como se llama tu hijo/a?',
+                  hintText: '¿Cómo se llama tu hijo/a?',
                 ),
               ),
               const SizedBox(height: 16),
