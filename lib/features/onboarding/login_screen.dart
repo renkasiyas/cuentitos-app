@@ -226,16 +226,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Back button row
-                Padding(
-                  padding: const EdgeInsets.only(left: 8, top: 4),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios_rounded,
-                      color: AppColors.cream.withAlpha(153),
-                      size: 20,
+                // Back button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4, top: 4),
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.arrow_back_ios_rounded,
+                        color: AppColors.cream.withAlpha(153),
+                        size: 20,
+                      ),
+                      onPressed: () => context.go('/welcome'),
                     ),
-                    onPressed: () => context.go('/'),
                   ),
                 ),
 
