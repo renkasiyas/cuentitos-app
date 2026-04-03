@@ -92,7 +92,7 @@ class _AudioPlayerBarState extends State<AudioPlayerBar> {
                         SliderTheme(
                           data: SliderThemeData(
                             activeTrackColor: AppColors.gold,
-                            inactiveTrackColor: Colors.white24,
+                            inactiveTrackColor: AppColors.cream.withAlpha(61),
                             thumbColor: AppColors.gold,
                             overlayColor: AppColors.gold.withValues(alpha: 0.2),
                             trackHeight: 3,
@@ -115,11 +115,11 @@ class _AudioPlayerBarState extends State<AudioPlayerBar> {
                             children: [
                               Text(
                                 _formatDuration(position),
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                style: TextStyle(color: AppColors.cream.withAlpha(179), fontSize: 12),
                               ),
                               Text(
                                 _formatDuration(total),
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                style: TextStyle(color: AppColors.cream.withAlpha(179), fontSize: 12),
                               ),
                             ],
                           ),
@@ -134,8 +134,8 @@ class _AudioPlayerBarState extends State<AudioPlayerBar> {
                               onPressed: _toggleSpeed,
                               child: Text(
                                 _speed == 1.0 ? '1x' : '0.75x',
-                                style: const TextStyle(
-                                  color: Colors.white70,
+                                style: TextStyle(
+                                  color: AppColors.cream.withAlpha(179),
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -152,7 +152,7 @@ class _AudioPlayerBarState extends State<AudioPlayerBar> {
                                         width: 28,
                                         height: 28,
                                         child: CircularProgressIndicator(
-                                          color: Colors.white,
+                                          color: AppColors.cream,
                                           strokeWidth: 2,
                                         ),
                                       ),
@@ -162,7 +162,7 @@ class _AudioPlayerBarState extends State<AudioPlayerBar> {
                                       padding: EdgeInsets.zero,
                                       icon: Icon(
                                         isPlaying ? Icons.pause_circle_filled : Icons.play_circle_filled,
-                                        color: Colors.white,
+                                        color: AppColors.cream,
                                         size: 56,
                                       ),
                                       onPressed: () {

@@ -207,7 +207,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
         children: [
           // Back button
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.cream),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
           const Spacer(),
@@ -216,7 +216,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
             IconButton(
               icon: Icon(
                 story.isFavorite ? Icons.favorite : Icons.favorite_border,
-                color: story.isFavorite ? Colors.redAccent : Colors.white,
+                color: story.isFavorite ? AppColors.terracotta : AppColors.cream,
               ),
               onPressed: _toggleFavorite,
             ),
@@ -232,15 +232,15 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
                     child: SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.cream),
                     ),
                   );
                 }
                 if (_localAudioPath != null || status == DownloadStatus.done) {
-                  return const Icon(Icons.download_done, color: Colors.white70);
+                  return Icon(Icons.download_done, color: AppColors.cream.withAlpha(179));
                 }
                 return IconButton(
-                  icon: const Icon(Icons.download_outlined, color: Colors.white),
+                  icon: const Icon(Icons.download_outlined, color: AppColors.cream),
                   onPressed: _triggerDownload,
                 );
               },
@@ -248,7 +248,7 @@ class _ReaderScreenState extends ConsumerState<ReaderScreen> {
           // Share button
           if (story != null)
             IconButton(
-              icon: const Icon(Icons.share_outlined, color: Colors.white),
+              icon: const Icon(Icons.share_outlined, color: AppColors.cream),
               onPressed: () {
                 final title = story.title ?? 'Cuentito';
                 Share.share('$title \u2014 escuchado en Cuentitos');
