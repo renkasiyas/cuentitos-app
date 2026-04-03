@@ -95,7 +95,7 @@ class SubscriptionScreen extends ConsumerWidget {
               onPressed: () => _reactivate(context, ref),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.success,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.cream,
               ),
               child: const Text('Reactivar suscripcion'),
             ),
