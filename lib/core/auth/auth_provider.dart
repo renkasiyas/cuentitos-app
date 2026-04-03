@@ -27,7 +27,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     if (expired) {
       try {
         final response = await _dio.post(Endpoints.refresh, data: {'token': token});
-        await SecureStorage.saveToken(response.data['token'], response.data['expiresAt']);
+        final newToken = response.data['token'] as String?;
+        final expiresAt = response.data['expiresAt'] as String?;
+        if (newToken == null || expiresAt == null) {
+          await SecureStorage.clear();
+          state = AuthState.unauthenticated;
+          return;
+        }
+        await SecureStorage.saveToken(newToken, expiresAt);
         state = AuthState.authenticated;
       } catch (_) {
         await SecureStorage.clear();
@@ -50,7 +57,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> verifyMagicLink(String code, String email) async {
     try {
       final response = await _dio.post(Endpoints.verify, data: {'code': code, 'email': email});
-      await SecureStorage.saveToken(response.data['token'], response.data['expiresAt']);
+      final token = response.data['token'] as String?;
+      final expiresAt = response.data['expiresAt'] as String?;
+      if (token == null || expiresAt == null) return false;
+      await SecureStorage.saveToken(token, expiresAt);
       state = AuthState.authenticated;
       return true;
     } catch (_) {
@@ -61,7 +71,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> loginWithGoogle(String idToken) async {
     try {
       final response = await _dio.post(Endpoints.login, data: {'method': 'google', 'idToken': idToken});
-      await SecureStorage.saveToken(response.data['token'], response.data['expiresAt']);
+      final token = response.data['token'] as String?;
+      final expiresAt = response.data['expiresAt'] as String?;
+      if (token == null || expiresAt == null) return false;
+      await SecureStorage.saveToken(token, expiresAt);
       state = AuthState.authenticated;
       return true;
     } catch (_) {

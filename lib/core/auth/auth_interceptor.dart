@@ -66,8 +66,9 @@ class AuthInterceptor extends Interceptor {
         Endpoints.refresh,
         data: {'token': oldToken},
       );
-      final newToken = response.data['token'] as String;
-      final expiresAt = response.data['expiresAt'] as String;
+      final newToken = response.data['token'] as String?;
+      final expiresAt = response.data['expiresAt'] as String?;
+      if (newToken == null || expiresAt == null) throw Exception('Invalid refresh response');
       await SecureStorage.saveToken(newToken, expiresAt);
 
       _refreshCompleter!.complete(newToken);

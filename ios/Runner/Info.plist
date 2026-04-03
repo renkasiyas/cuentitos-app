@@ -13,12 +13,12 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.900652762826-0fste388j9rc2snei1ih0c0mf1kl2fqf</string>
+				<string>com.googleusercontent.apps.900652762826-k8cnra10sunrqr01uo7munnujsc062bp</string>
 			</array>
 		</dict>
 	</array>
 	<key>GIDClientID</key>
-	<string>900652762826-0fste388j9rc2snei1ih0c0mf1kl2fqf.apps.googleusercontent.com</string>
+	<string>900652762826-k8cnra10sunrqr01uo7munnujsc062bp.apps.googleusercontent.com</string>
 	<key>CFBundleDisplayName</key>
 	<string>Cuentitos</string>
 	<key>CFBundleExecutable</key>
