@@ -30,6 +30,57 @@ final _onboardingPaths = [
   '/auth/mobile',
 ];
 
+// ─── Page Transitions ───────────────────────────────────────────
+
+/// Crossfade — for tab switches, auth redirects, screens with built-in entrance animations
+CustomTransitionPage<void> _fade(Widget child) {
+  return CustomTransitionPage(
+    child: child,
+    transitionDuration: const Duration(milliseconds: 300),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return FadeTransition(opacity: animation, child: child);
+    },
+  );
+}
+
+/// Slide from right — forward navigation in a flow
+CustomTransitionPage<void> _slideForward(Widget child) {
+  return CustomTransitionPage(
+    child: child,
+    transitionDuration: const Duration(milliseconds: 350),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curve = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return SlideTransition(
+        position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(curve),
+        child: FadeTransition(opacity: animation, child: child),
+      );
+    },
+  );
+}
+
+/// Slide up from bottom — modal overlays (reader, checkout)
+CustomTransitionPage<void> _slideUp(Widget child) {
+  return CustomTransitionPage(
+    child: child,
+    transitionDuration: const Duration(milliseconds: 400),
+    reverseTransitionDuration: const Duration(milliseconds: 300),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curve = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      return SlideTransition(
+        position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(curve),
+        child: FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: const Interval(0, 0.5)),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
+// ─── Router ─────────────────────────────────────────────────────
+
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
 
@@ -58,71 +109,91 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Onboarding
+      // Onboarding — fade transitions (each screen has its own entrance animations)
       GoRoute(
-          path: '/welcome', builder: (_, __) => const OnboardingScreen()),
-      GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+        path: '/welcome',
+        pageBuilder: (_, __) => _fade(const OnboardingScreen()),
+      ),
       GoRoute(
-          path: '/magic-link-sent',
-          builder: (_, state) => MagicLinkSentScreen(
-              email: state.uri.queryParameters['email'] ?? '')),
-      GoRoute(path: '/quiz', builder: (_, __) => const QuizScreen()),
+        path: '/login',
+        pageBuilder: (_, __) => _slideForward(const LoginScreen()),
+      ),
       GoRoute(
-          path: '/tier',
-          builder: (_, state) =>
-              TierScreen(quizData: state.extra as Map<String, dynamic>)),
+        path: '/magic-link-sent',
+        pageBuilder: (_, state) => _fade(MagicLinkSentScreen(
+            email: state.uri.queryParameters['email'] ?? '')),
+      ),
       GoRoute(
-          path: '/checkout',
-          builder: (_, state) => CheckoutScreen(
-              onboardData: state.extra as Map<String, dynamic>)),
+        path: '/quiz',
+        pageBuilder: (_, __) => _slideForward(const QuizScreen()),
+      ),
       GoRoute(
-          path: '/waiting', builder: (_, __) => const WaitingScreen()),
+        path: '/tier',
+        pageBuilder: (_, state) => _slideForward(
+            TierScreen(quizData: state.extra as Map<String, dynamic>)),
+      ),
+      GoRoute(
+        path: '/checkout',
+        pageBuilder: (_, state) => _slideUp(CheckoutScreen(
+            onboardData: state.extra as Map<String, dynamic>)),
+      ),
+      GoRoute(
+        path: '/waiting',
+        pageBuilder: (_, __) => _fade(const WaitingScreen()),
+      ),
 
-      // Main app (shell with bottom nav)
+      // Main app (shell with bottom nav) — tabs fade, no slide
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => _MainShell(shell: shell),
         branches: [
           StatefulShellBranch(routes: [
             GoRoute(
-                path: '/tonight',
-                builder: (_, __) => const TonightScreen()),
+              path: '/tonight',
+              pageBuilder: (_, __) => _fade(const TonightScreen()),
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-                path: '/library',
-                builder: (_, __) => const LibraryScreen()),
+              path: '/library',
+              pageBuilder: (_, __) => _fade(const LibraryScreen()),
+            ),
             GoRoute(
-                path: '/library/playlist/:id',
-                builder: (_, state) => PlaylistDetailScreen(
-                    playlistId: state.pathParameters['id']!)),
+              path: '/library/playlist/:id',
+              pageBuilder: (_, state) => _slideForward(PlaylistDetailScreen(
+                  playlistId: state.pathParameters['id']!)),
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-                path: '/settings',
-                builder: (_, __) => const SettingsScreen()),
+              path: '/settings',
+              pageBuilder: (_, __) => _fade(const SettingsScreen()),
+            ),
             GoRoute(
-                path: '/settings/profile',
-                builder: (_, __) => const ProfileEditorScreen()),
+              path: '/settings/profile',
+              pageBuilder: (_, __) => _slideForward(const ProfileEditorScreen()),
+            ),
             GoRoute(
-                path: '/settings/subscription',
-                builder: (_, __) => const SubscriptionScreen()),
+              path: '/settings/subscription',
+              pageBuilder: (_, __) => _slideForward(const SubscriptionScreen()),
+            ),
           ]),
         ],
       ),
 
-      // Story reader (full-screen overlay)
+      // Story reader — slides up from bottom (modal overlay feel)
       GoRoute(
-          path: '/reader/:id',
-          builder: (_, state) =>
-              ReaderScreen(storyId: state.pathParameters['id']!)),
+        path: '/reader/:id',
+        pageBuilder: (_, state) => _slideUp(
+            ReaderScreen(storyId: state.pathParameters['id']!)),
+      ),
 
-      // Deep link handler
+      // Deep link handler — instant, no animation
       GoRoute(
         path: '/auth/mobile',
-        builder: (_, state) => _MagicLinkVerifier(
+        pageBuilder: (_, state) => _fade(_MagicLinkVerifier(
           code: state.uri.queryParameters['code'] ?? '',
           email: state.uri.queryParameters['email'] ?? '',
-        ),
+        )),
       ),
     ],
   );
