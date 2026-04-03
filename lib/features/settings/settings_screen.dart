@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
 import '../../core/auth/auth_provider.dart';
@@ -12,117 +13,38 @@ import '../../providers/stories_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../theme/app_theme.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final parentAsync = ref.watch(parentProfileProvider);
-    final childAsync = ref.watch(childProfileProvider);
-    final tier = ref.watch(subscriptionTierProvider);
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ajustes'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
-      body: ListView(
-        children: [
-          // ── Profile ───────────────────────────────────────────────────────
-          _SectionHeader('Perfil'),
-          childAsync.when(
-            loading: () => const ListTile(title: Text('Cargando...')),
-            error: (_, __) => const ListTile(title: Text('Error al cargar perfil')),
-            data: (child) => ListTile(
-              title: Text(child?.name ?? '—'),
-              subtitle: Text(
-                [
-                  if (child?.favoriteAnimal != null) child!.favoriteAnimal,
-                  if (child?.favoriteColor != null) child!.favoriteColor,
-                ].join(' · '),
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/settings/profile'),
-            ),
-          ),
-          const Divider(height: 1),
+class _SettingsScreenState extends ConsumerState<SettingsScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _entranceCtrl;
+  late Animation<double> _entranceFade;
+  late Animation<Offset> _entranceSlide;
 
-          // ── Subscription ──────────────────────────────────────────────────
-          _SectionHeader('Suscripcion'),
-          ListTile(
-            title: Text(tier == 'premium' ? 'Plan Premium' : 'Plan Basico'),
-            subtitle: Text(tier == 'premium' ? '\$99 MXN / mes' : 'Gratis'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push('/settings/subscription'),
-          ),
-          const Divider(height: 1),
-
-          // ── Delivery ──────────────────────────────────────────────────────
-          _SectionHeader('Hora de entrega'),
-          parentAsync.when(
-            loading: () => const ListTile(title: Text('Cargando...')),
-            error: (_, __) => const ListTile(title: Text('Error al cargar')),
-            data: (parent) {
-              final hour = parent?.deliveryHour ?? 18;
-              return ListTile(
-                title: const Text('Hora de tu cuento'),
-                subtitle: Text(_formatHour(hour)),
-                trailing: const Icon(Icons.access_time),
-                onTap: () => _showDeliveryTimePicker(context, ref, hour),
-              );
-            },
-          ),
-          const Divider(height: 1),
-
-          // ── Storage ───────────────────────────────────────────────────────
-          _SectionHeader('Almacenamiento'),
-          _StorageTile(),
-          const Divider(height: 1),
-
-          // ── About ─────────────────────────────────────────────────────────
-          _SectionHeader('Acerca de'),
-          ListTile(
-            title: const Text('Version'),
-            trailing: Text('1.0.0', style: TextStyle(color: AppColors.cream.withAlpha(128))),
-          ),
-          ListTile(
-            title: const Text('Politica de privacidad'),
-            trailing: Icon(Icons.open_in_new, size: 18, color: AppColors.cream.withAlpha(128)),
-            onTap: () {
-              // Could open webview; for now placeholder action
-            },
-          ),
-          ListTile(
-            title: const Text('Soporte'),
-            subtitle: const Text('hola@cuentitos.mx'),
-            trailing: Icon(Icons.mail_outline, size: 18, color: AppColors.cream.withAlpha(128)),
-            onTap: () {},
-          ),
-          const Divider(height: 1),
-
-          // ── Logout ────────────────────────────────────────────────────────
-          const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: () async {
-                await ref.read(authProvider.notifier).logout();
-                if (context.mounted) context.go('/welcome');
-              },
-              child: const Text('Cerrar sesion', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            ),
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
+  @override
+  void initState() {
+    super.initState();
+    _entranceCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
     );
+    _entranceFade = CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut);
+    _entranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.06),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _entranceCtrl, curve: Curves.easeOut));
+    _entranceCtrl.forward();
+  }
+
+  @override
+  void dispose() {
+    _entranceCtrl.dispose();
+    super.dispose();
   }
 
   String _formatHour(int hour) {
@@ -131,11 +53,12 @@ class SettingsScreen extends ConsumerWidget {
     return '$h:00 $period';
   }
 
-  void _showDeliveryTimePicker(BuildContext context, WidgetRef ref, int currentHour) {
+  void _showDeliveryTimePicker(BuildContext context, int currentHour) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: AppColors.nightBlue,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (ctx) => _DeliveryTimePicker(
         currentHour: currentHour,
@@ -147,7 +70,9 @@ class SettingsScreen extends ConsumerWidget {
               final dio = ref.read(apiClientProvider);
               await dio.post(Endpoints.deliveryTime, data: {'hour': hour});
             } else {
-              await ref.read(pendingActionsProvider).enqueue('delivery_time', {'hour': hour});
+              await ref
+                  .read(pendingActionsProvider)
+                  .enqueue('delivery_time', {'hour': hour});
             }
             ref.invalidate(parentProfileProvider);
           } catch (_) {
@@ -161,9 +86,343 @@ class SettingsScreen extends ConsumerWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    final parentAsync = ref.watch(parentProfileProvider);
+    final childAsync = ref.watch(childProfileProvider);
+    final tier = ref.watch(subscriptionTierProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.skyDeep,
+      body: Stack(
+        children: [
+          // Night sky gradient top
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 220,
+            child: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF060810), AppColors.skyDeep],
+                ),
+              ),
+            ),
+          ),
+
+          // Subtle gold glow top-right
+          Positioned(
+            top: -50,
+            right: -30,
+            child: Container(
+              width: 200,
+              height: 200,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    AppColors.gold.withAlpha(14),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          FadeTransition(
+            opacity: _entranceFade,
+            child: SlideTransition(
+              position: _entranceSlide,
+              child: SafeArea(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    // Custom app bar
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Text(
+                        'Ajustes',
+                        style: GoogleFonts.fraunces(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.cream,
+                          height: 1.1,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // ── Profile hero section ──────────────────────────────────
+                    childAsync.when(
+                      loading: () => const _ProfileHeroSkeleton(),
+                      error: (_, __) => const SizedBox.shrink(),
+                      data: (child) => _ProfileHero(
+                        childName: child?.name,
+                        animal: child?.favoriteAnimal,
+                        color: child?.favoriteColor,
+                        onTap: () => context.push('/settings/profile'),
+                      ),
+                    ),
+
+                    const SizedBox(height: 28),
+
+                    // ── Suscripcion ───────────────────────────────────────────
+                    _SectionHeader('Suscripcion'),
+                    const SizedBox(height: 8),
+                    _SettingsCard(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.star_outline_rounded,
+                          label: tier == 'premium' ? 'Plan Premium' : 'Plan Basico',
+                          sublabel: tier == 'premium' ? '\$99 MXN / mes' : 'Gratis',
+                          onTap: () => context.push('/settings/subscription'),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Hora de entrega ───────────────────────────────────────
+                    _SectionHeader('Hora de entrega'),
+                    const SizedBox(height: 8),
+                    _SettingsCard(
+                      children: [
+                        parentAsync.when(
+                          loading: () => const _TileLoading(),
+                          error: (_, __) => const _TileError(),
+                          data: (parent) {
+                            final hour = parent?.deliveryHour ?? 18;
+                            return _SettingsTile(
+                              icon: Icons.nights_stay_outlined,
+                              label: 'Hora de tu cuento',
+                              sublabel: _formatHour(hour),
+                              onTap: () =>
+                                  _showDeliveryTimePicker(context, hour),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // ── Almacenamiento ────────────────────────────────────────
+                    _SectionHeader('Almacenamiento'),
+                    const SizedBox(height: 8),
+                    _StorageCard(),
+
+                    const SizedBox(height: 20),
+
+                    // ── Acerca de ─────────────────────────────────────────────
+                    _SectionHeader('Acerca de'),
+                    const SizedBox(height: 8),
+                    _SettingsCard(
+                      children: [
+                        _SettingsTile(
+                          icon: Icons.info_outline_rounded,
+                          label: 'Version',
+                          trailing: Text(
+                            '1.0.0',
+                            style: GoogleFonts.nunito(
+                              color: AppColors.cream.withAlpha(128),
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                        _SettingsDivider(),
+                        _SettingsTile(
+                          icon: Icons.shield_outlined,
+                          label: 'Politica de privacidad',
+                          trailing: Icon(
+                            Icons.open_in_new,
+                            size: 16,
+                            color: AppColors.cream.withAlpha(100),
+                          ),
+                          onTap: () {},
+                        ),
+                        _SettingsDivider(),
+                        _SettingsTile(
+                          icon: Icons.mail_outline_rounded,
+                          label: 'Soporte',
+                          sublabel: 'hola@cuentitos.mx',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // ── Logout ────────────────────────────────────────────────
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: _LogoutButton(
+                        onPressed: () async {
+                          await ref.read(authProvider.notifier).logout();
+                          if (context.mounted) context.go('/welcome');
+                        },
+                      ),
+                    ),
+
+                    const SizedBox(height: 40),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-// ─── Section Header ──────────────────────────────────────────────────────────
+// ─── Profile hero ─────────────────────────────────────────────────────────────
+
+class _ProfileHero extends StatelessWidget {
+  final String? childName;
+  final String? animal;
+  final String? color;
+  final VoidCallback onTap;
+
+  const _ProfileHero({
+    required this.childName,
+    required this.animal,
+    required this.color,
+    required this.onTap,
+  });
+
+  String get _initials {
+    final name = childName ?? '';
+    if (name.isEmpty) return '?';
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return name[0].toUpperCase();
+  }
+
+  String get _subtitle {
+    final parts = [
+      if (animal != null && animal!.isNotEmpty) animal,
+      if (color != null && color!.isNotEmpty) color,
+    ];
+    return parts.join(' · ');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.nightBlue,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.gold.withAlpha(40), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.gold.withAlpha(15),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Gold gradient avatar circle
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.goldLight, AppColors.gold],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.gold.withAlpha(60),
+                    blurRadius: 12,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  _initials,
+                  style: GoogleFonts.fraunces(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.skyDeep,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    childName ?? '—',
+                    style: GoogleFonts.fraunces(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.cream,
+                      height: 1.2,
+                    ),
+                  ),
+                  if (_subtitle.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _subtitle,
+                      style: GoogleFonts.nunito(
+                        fontSize: 13,
+                        color: AppColors.cream.withAlpha(153),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: AppColors.gold.withAlpha(160),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileHeroSkeleton extends StatelessWidget {
+  const _ProfileHeroSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      height: 100,
+      decoration: BoxDecoration(
+        color: AppColors.nightBlue,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.gold.withAlpha(20), width: 1),
+      ),
+      child: const Center(
+        child: CircularProgressIndicator(color: AppColors.gold, strokeWidth: 2),
+      ),
+    );
+  }
+}
+
+// ─── Section header with gold underline ───────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String title;
@@ -172,31 +431,163 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w600,
-          color: AppColors.cream.withAlpha(128),
-          letterSpacing: 0.8,
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: GoogleFonts.fraunces(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.gold.withAlpha(200),
+              height: 1.2,
+              fontFeatures: const [FontFeature.enable('smcp')],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            height: 1,
+            width: 32,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.gold.withAlpha(160), Colors.transparent],
+              ),
+              borderRadius: BorderRadius.circular(1),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Settings card container ──────────────────────────────────────────────────
+
+class _SettingsCard extends StatelessWidget {
+  final List<Widget> children;
+  const _SettingsCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppColors.nightBlue,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold.withAlpha(25), width: 1),
+      ),
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+}
+
+// ─── Single settings tile ─────────────────────────────────────────────────────
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String? sublabel;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.label,
+    this.sublabel,
+    this.trailing,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      splashColor: AppColors.gold.withAlpha(12),
+      highlightColor: AppColors.gold.withAlpha(6),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.goldDim,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: AppColors.gold),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: GoogleFonts.nunito(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.cream,
+                    ),
+                  ),
+                  if (sublabel != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      sublabel!,
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        color: AppColors.cream.withAlpha(128),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (trailing != null)
+              trailing!
+            else if (onTap != null)
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: AppColors.cream.withAlpha(100),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-// ─── Storage Tile ─────────────────────────────────────────────────────────────
-
-class _StorageTile extends ConsumerStatefulWidget {
+class _SettingsDivider extends StatelessWidget {
   @override
-  ConsumerState<_StorageTile> createState() => _StorageTileState();
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      indent: 66,
+      endIndent: 0,
+      color: AppColors.cream.withAlpha(18),
+    );
+  }
 }
 
-class _StorageTileState extends ConsumerState<_StorageTile> {
+// ─── Storage card with visual indicator ───────────────────────────────────────
+
+class _StorageCard extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<_StorageCard> createState() => _StorageCardState();
+}
+
+class _StorageCardState extends ConsumerState<_StorageCard> {
   int _count = 0;
   int _bytes = 0;
   bool _loaded = false;
+
+  // Assume 500 MB soft cap for the progress bar display
+  static const int _softCapBytes = 500 * 1024 * 1024;
 
   @override
   void initState() {
@@ -224,22 +615,156 @@ class _StorageTileState extends ConsumerState<_StorageTile> {
   @override
   Widget build(BuildContext context) {
     if (!_loaded) {
-      return const ListTile(title: Text('Calculando...'));
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 20),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.nightBlue,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.gold.withAlpha(25), width: 1),
+        ),
+        child: Text(
+          'Calculando...',
+          style: GoogleFonts.nunito(color: AppColors.cream.withAlpha(128)),
+        ),
+      );
     }
-    return ListTile(
-      title: Text('$_count cuentos descargados (${_formatMB(_bytes)})'),
-      trailing: TextButton(
-        onPressed: () async {
-          await AudioCache.clearAll();
-          _load();
-        },
-        child: const Text('Borrar', style: TextStyle(color: AppColors.error)),
+
+    final progress = (_bytes / _softCapBytes).clamp(0.0, 1.0);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.nightBlue,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gold.withAlpha(25), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.goldDim,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.download_outlined,
+                  size: 18,
+                  color: AppColors.gold,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$_count ${_count == 1 ? 'cuento descargado' : 'cuentos descargados'}',
+                      style: GoogleFonts.nunito(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.cream,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatMB(_bytes),
+                      style: GoogleFonts.nunito(
+                        fontSize: 12,
+                        color: AppColors.cream.withAlpha(128),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () async {
+                  await AudioCache.clearAll();
+                  _load();
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  textStyle: GoogleFonts.nunito(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                child: const Text('Borrar'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Gold progress bar
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppColors.cream.withAlpha(20),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress > 0.8 ? AppColors.terracotta : AppColors.gold,
+              ),
+              minHeight: 6,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ─── Delivery Time Picker ─────────────────────────────────────────────────────
+// ─── Logout button ────────────────────────────────────────────────────────────
+
+class _LogoutButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _LogoutButton({required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.terracotta.withAlpha(30),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.terracotta,
+            side: BorderSide(color: AppColors.terracotta.withAlpha(160), width: 1.5),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            backgroundColor: AppColors.terracotta.withAlpha(12),
+          ),
+          onPressed: onPressed,
+          icon: const Icon(Icons.logout_rounded, size: 20),
+          label: Text(
+            'Cerrar sesion',
+            style: GoogleFonts.nunito(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Delivery time picker ─────────────────────────────────────────────────────
 
 class _DeliveryTimePicker extends StatelessWidget {
   final int currentHour;
@@ -267,12 +792,16 @@ class _DeliveryTimePicker extends StatelessWidget {
             borderRadius: BorderRadius.circular(2),
           ),
         ),
-        const SizedBox(height: 16),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20),
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'Hora de entrega',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.cream),
+            style: GoogleFonts.fraunces(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.cream,
+            ),
           ),
         ),
         const SizedBox(height: 8),
@@ -286,13 +815,16 @@ class _DeliveryTimePicker extends StatelessWidget {
               return ListTile(
                 title: Text(
                   _formatHour(hour),
-                  style: TextStyle(
+                  style: GoogleFonts.nunito(
                     color: isSelected ? AppColors.gold : AppColors.cream,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w700 : FontWeight.normal,
+                    fontSize: 15,
                   ),
                 ),
                 trailing: isSelected
-                    ? const Icon(Icons.check, color: AppColors.gold)
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: AppColors.gold, size: 20)
                     : null,
                 onTap: () => onSelect(hour),
               );
@@ -301,6 +833,38 @@ class _DeliveryTimePicker extends StatelessWidget {
         ),
         const SizedBox(height: 16),
       ],
+    );
+  }
+}
+
+// ─── Loading / error placeholders ────────────────────────────────────────────
+
+class _TileLoading extends StatelessWidget {
+  const _TileLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        'Cargando...',
+        style: GoogleFonts.nunito(color: AppColors.cream.withAlpha(128)),
+      ),
+    );
+  }
+}
+
+class _TileError extends StatelessWidget {
+  const _TileError();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Text(
+        'Error al cargar',
+        style: GoogleFonts.nunito(color: AppColors.error.withAlpha(200)),
+      ),
     );
   }
 }
