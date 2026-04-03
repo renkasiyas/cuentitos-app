@@ -65,7 +65,7 @@ class SubscriptionScreen extends ConsumerWidget {
                 Text(
                   tier == 'premium'
                       ? 'Audio de alta calidad + sin anuncios'
-                      : 'Un cuento al dia',
+                      : 'Un cuento al día',
                   style: TextStyle(fontSize: 13, color: AppColors.cream.withAlpha(128)),
                 ),
               ],

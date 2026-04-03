@@ -229,7 +229,7 @@ class _ProfileEditorScreenState extends ConsumerState<ProfileEditorScreen> {
                 controller: _animalController,
                 decoration: const InputDecoration(
                   labelText: 'Animal favorito',
-                  hintText: 'Perro, gato, dragon...',
+                  hintText: 'Perro, gato, dragón...',
                 ),
               ),
               const SizedBox(height: 16),
