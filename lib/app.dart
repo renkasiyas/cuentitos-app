@@ -39,16 +39,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isOnboarding =
           _onboardingPaths.any((p) => state.matchedLocation.startsWith(p));
 
-      // While auth is resolving, don't redirect
-      if (authState == AuthState.unknown) return null;
+      // While auth is resolving, show loading (redirect to a safe route)
+      if (authState == AuthState.unknown) {
+        // Stay on current route — the UI will show a loading state
+        return null;
+      }
 
+      // Unauthenticated user trying to access protected routes → welcome
       if (authState == AuthState.unauthenticated && !isOnboarding) {
         return '/welcome';
       }
-      if (authState == AuthState.authenticated &&
-          state.matchedLocation == '/welcome') {
+
+      // Authenticated user on any onboarding route → tonight
+      if (authState == AuthState.authenticated && isOnboarding) {
         return '/tonight';
       }
+
       return null;
     },
     routes: [
@@ -184,8 +190,17 @@ class _MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
     ref.watch(appInitProvider); // Trigger sync on mount
     ref.watch(connectivityFlushProvider); // Flush pending actions on reconnect
+
+    // Show loading while auth is resolving
+    if (authState == AuthState.unknown) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
+      );
+    }
+
     return Scaffold(
       body: shell,
       bottomNavigationBar: BottomNavigationBar(

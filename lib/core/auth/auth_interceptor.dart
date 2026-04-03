@@ -7,6 +7,14 @@ class AuthInterceptor extends Interceptor {
   final Dio _dio;
   Completer<String>? _refreshCompleter;
 
+  // Separate Dio for refresh calls — no interceptor attached, avoids re-entry
+  late final Dio _refreshDio = Dio(BaseOptions(
+    baseUrl: Endpoints.baseUrl,
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 15),
+    headers: {'Content-Type': 'application/json'},
+  ));
+
   AuthInterceptor(this._dio);
 
   @override
@@ -25,9 +33,14 @@ class AuthInterceptor extends Interceptor {
       return;
     }
 
+    // Don't try to refresh if the failing request IS the refresh endpoint
+    if (err.requestOptions.path == Endpoints.refresh) {
+      handler.next(err);
+      return;
+    }
+
     try {
       final newToken = await _refreshToken();
-      // Retry original request with new token
       final opts = err.requestOptions;
       opts.headers['Authorization'] = 'Bearer $newToken';
       final retryResponse = await _dio.fetch(opts);
@@ -39,7 +52,6 @@ class AuthInterceptor extends Interceptor {
   }
 
   Future<String> _refreshToken() async {
-    // If already refreshing, wait for the existing refresh
     if (_refreshCompleter != null) {
       return _refreshCompleter!.future;
     }
@@ -49,10 +61,10 @@ class AuthInterceptor extends Interceptor {
       final oldToken = await SecureStorage.getToken();
       if (oldToken == null) throw Exception('No token');
 
-      final response = await _dio.post(
-        '${Endpoints.baseUrl}${Endpoints.refresh}',
+      // Use _refreshDio (no interceptor) to avoid re-entry
+      final response = await _refreshDio.post(
+        Endpoints.refresh,
         data: {'token': oldToken},
-        options: Options(headers: {}),
       );
       final newToken = response.data['token'] as String;
       final expiresAt = response.data['expiresAt'] as String;
