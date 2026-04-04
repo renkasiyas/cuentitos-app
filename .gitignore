@@ -39,6 +39,15 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# Fastlane secrets
+android/play-store-key.json
+ios/AuthKey_*.p8
+ios/secure/
+ios/api_key.json
+ios/fastlane/report.xml
+android/fastlane/report.xml
+**/Gemfile.lock
+
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile

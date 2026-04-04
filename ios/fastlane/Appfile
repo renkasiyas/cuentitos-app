@@ -1,0 +1,4 @@
+app_identifier("mx.cuentitos.app")
+apple_id(ENV["APPLE_ID"])
+itc_team_id(ENV["APPLE_ITC_TEAM_ID"])
+team_id("3G9H3Z5AP4")

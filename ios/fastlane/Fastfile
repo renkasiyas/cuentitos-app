@@ -1,0 +1,16 @@
+default_platform(:ios)
+
+API_KEY_PATH = File.expand_path("../api_key.json", __dir__)
+
+platform :ios do
+  desc "Upload latest IPA to TestFlight"
+  lane :release do
+    upload_to_testflight(
+      api_key_path: API_KEY_PATH,
+      ipa: File.expand_path("../build/ios/ipa/cuentitos.ipa", __dir__ + "/.."),
+      skip_waiting_for_build_processing: true,
+      skip_submission: true,
+      distribute_external: false,
+    )
+  end
+end
