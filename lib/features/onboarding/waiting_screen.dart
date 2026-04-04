@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/endpoints.dart';
+import '../../core/auth/auth_provider.dart';
 import '../../core/sync/sync_provider.dart';
 import '../../theme/app_theme.dart';
 
@@ -119,6 +120,7 @@ class _WaitingScreenState extends ConsumerState<WaitingScreen>
           _pollTimer?.cancel();
           setState(() => _syncing = true);
           await ref.read(syncProvider).fullSync();
+          await ref.read(userStateProvider.notifier).refreshState();
           if (mounted) context.go('/tonight');
         }
       }

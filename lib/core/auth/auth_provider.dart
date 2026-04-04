@@ -45,13 +45,16 @@ class UserStateNotifier extends StateNotifier<UserState> {
   }
 
   Future<UserState> _fetchUserState() async {
-    try {
-      final response = await _dio.get(Endpoints.me);
-      final stateStr = response.data['userState'] as String?;
-      return _mapState(stateStr);
-    } catch (_) {
-      return UserState.unknown;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        final response = await _dio.get(Endpoints.me);
+        final stateStr = response.data['userState'] as String?;
+        return _mapState(stateStr);
+      } catch (_) {
+        if (attempt < 2) await Future.delayed(Duration(seconds: attempt + 1));
+      }
     }
+    return UserState.unknown;
   }
 
   UserState _mapState(String? s) => switch (s) {

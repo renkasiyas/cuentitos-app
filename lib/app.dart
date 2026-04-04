@@ -112,7 +112,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // active, pastDue, canceled — allow main app + tier/checkout for resubscribe
-      if (['/welcome', '/login', '/magic-link-sent', '/quiz'].any((p) => loc.startsWith(p))) {
+      if (['/welcome', '/login', '/magic-link-sent', '/quiz', '/waiting'].any((p) => loc.startsWith(p))) {
         return '/tonight';
       }
       return null;
@@ -234,7 +234,7 @@ class _MagicLinkVerifierState extends ConsumerState<_MagicLinkVerifier> {
     if (!mounted) return;
     if (success) {
       // Router redirect handles navigation based on userState
-      if (mounted) context.go('/');
+      if (mounted) context.go('/tonight');
     } else {
       setState(() {
         _verifying = false;
