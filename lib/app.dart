@@ -70,12 +70,28 @@ CustomTransitionPage<void> _slideUp(Widget child) {
 
 // ─── Router ─────────────────────────────────────────────────────
 
+// Notifier that tells GoRouter to re-evaluate redirect when userState changes
+class _RouterRefreshNotifier extends ChangeNotifier {
+  UserState _state = UserState.unknown;
+  UserState get userState => _state;
+
+  _RouterRefreshNotifier(Ref ref) {
+    ref.listen(userStateProvider, (_, next) {
+      _state = next;
+      notifyListeners();
+    });
+    _state = ref.read(userStateProvider);
+  }
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
-  final userState = ref.watch(userStateProvider);
+  final notifier = _RouterRefreshNotifier(ref);
 
   return GoRouter(
     initialLocation: '/tonight',
+    refreshListenable: notifier,
     redirect: (context, state) {
+      final userState = notifier.userState;
       final loc = state.matchedLocation;
 
       if (userState == UserState.unknown) return null;
@@ -86,7 +102,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (userState == UserState.lead || userState == UserState.onboarding) {
-        if (['/quiz', '/tier', '/checkout', '/waiting'].any((p) => loc.startsWith(p))) return null;
+        if (['/quiz', '/tier', '/checkout'].any((p) => loc.startsWith(p))) return null;
         return '/quiz';
       }
 
@@ -128,7 +144,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/checkout',
         pageBuilder: (_, state) => _slideUp(CheckoutScreen(
-            onboardData: state.extra as Map<String, dynamic>)),
+            onboardData: (state.extra as Map<String, dynamic>?) ?? {})),
       ),
       GoRoute(
         path: '/waiting',
@@ -217,7 +233,8 @@ class _MagicLinkVerifierState extends ConsumerState<_MagicLinkVerifier> {
         .verifyMagicLink(widget.code, widget.email);
     if (!mounted) return;
     if (success) {
-      context.go('/tonight');
+      // Router redirect handles navigation based on userState
+      if (mounted) context.go('/');
     } else {
       setState(() {
         _verifying = false;
