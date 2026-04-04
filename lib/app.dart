@@ -19,17 +19,6 @@ import 'features/settings/profile_editor_screen.dart';
 import 'features/settings/subscription_screen.dart';
 import 'core/auth/auth_provider.dart';
 
-final _onboardingPaths = [
-  '/welcome',
-  '/login',
-  '/magic-link-sent',
-  '/quiz',
-  '/tier',
-  '/checkout',
-  '/waiting',
-  '/auth/mobile',
-];
-
 // ─── Page Transitions ───────────────────────────────────────────
 
 /// Crossfade — for tab switches, auth redirects, screens with built-in entrance animations
@@ -82,30 +71,34 @@ CustomTransitionPage<void> _slideUp(Widget child) {
 // ─── Router ─────────────────────────────────────────────────────
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final userState = ref.watch(userStateProvider);
 
   return GoRouter(
     initialLocation: '/tonight',
     redirect: (context, state) {
-      final isOnboarding =
-          _onboardingPaths.any((p) => state.matchedLocation.startsWith(p));
+      final loc = state.matchedLocation;
 
-      // While auth is resolving, show loading (redirect to a safe route)
-      if (authState == AuthState.unknown) {
-        // Stay on current route — the UI will show a loading state
-        return null;
-      }
+      if (userState == UserState.unknown) return null;
 
-      // Unauthenticated user trying to access protected routes → welcome
-      if (authState == AuthState.unauthenticated && !isOnboarding) {
+      if (userState == UserState.anonymous) {
+        if (['/welcome', '/login', '/magic-link-sent', '/auth/mobile'].any((p) => loc.startsWith(p))) return null;
         return '/welcome';
       }
 
-      // Authenticated user on any onboarding route → tonight
-      if (authState == AuthState.authenticated && isOnboarding) {
-        return '/tonight';
+      if (userState == UserState.lead || userState == UserState.onboarding) {
+        if (['/quiz', '/tier', '/checkout', '/waiting'].any((p) => loc.startsWith(p))) return null;
+        return '/quiz';
       }
 
+      if (userState == UserState.unpaid) {
+        if (['/tier', '/checkout', '/waiting'].any((p) => loc.startsWith(p))) return null;
+        return '/tier';
+      }
+
+      // active, pastDue, canceled — allow main app + tier/checkout for resubscribe
+      if (['/welcome', '/login', '/magic-link-sent', '/quiz'].any((p) => loc.startsWith(p))) {
+        return '/tonight';
+      }
       return null;
     },
     routes: [
@@ -130,7 +123,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/tier',
         pageBuilder: (_, state) => _slideForward(
-            TierScreen(quizData: state.extra as Map<String, dynamic>)),
+            TierScreen(quizData: state.extra as Map<String, dynamic>?)),
       ),
       GoRoute(
         path: '/checkout',
@@ -220,7 +213,7 @@ class _MagicLinkVerifierState extends ConsumerState<_MagicLinkVerifier> {
 
   Future<void> _verify() async {
     final success = await ref
-        .read(authProvider.notifier)
+        .read(userStateProvider.notifier)
         .verifyMagicLink(widget.code, widget.email);
     if (!mounted) return;
     if (success) {
@@ -261,12 +254,12 @@ class _MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authProvider);
+    final userState = ref.watch(userStateProvider);
     ref.watch(appInitProvider); // Trigger sync on mount
     ref.watch(connectivityFlushProvider); // Flush pending actions on reconnect
 
     // Show loading while auth is resolving
-    if (authState == AuthState.unknown) {
+    if (userState == UserState.unknown) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator(color: AppColors.gold)),
       );

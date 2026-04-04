@@ -119,7 +119,7 @@ class _MagicLinkSentScreenState extends ConsumerState<MagicLinkSentScreen>
       _resendMessage = null;
     });
     final success =
-        await ref.read(authProvider.notifier).loginWithEmail(widget.email);
+        await ref.read(userStateProvider.notifier).loginWithEmail(widget.email);
     if (!mounted) return;
     setState(() => _resending = false);
     if (success) {

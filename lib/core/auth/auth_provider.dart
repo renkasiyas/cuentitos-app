@@ -4,23 +4,23 @@ import '../api/api_client.dart';
 import '../api/endpoints.dart';
 import '../storage/secure_storage.dart';
 
-enum AuthState { unknown, authenticated, unauthenticated }
+enum UserState { unknown, anonymous, lead, onboarding, unpaid, active, pastDue, canceled }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.read(apiClientProvider));
+final userStateProvider = StateNotifierProvider<UserStateNotifier, UserState>((ref) {
+  return UserStateNotifier(ref.read(apiClientProvider));
 });
 
-class AuthNotifier extends StateNotifier<AuthState> {
+class UserStateNotifier extends StateNotifier<UserState> {
   final Dio _dio;
 
-  AuthNotifier(this._dio) : super(AuthState.unknown) {
+  UserStateNotifier(this._dio) : super(UserState.unknown) {
     _checkAuth();
   }
 
   Future<void> _checkAuth() async {
     final token = await SecureStorage.getToken();
     if (token == null) {
-      state = AuthState.unauthenticated;
+      state = UserState.anonymous;
       return;
     }
     final expired = await SecureStorage.isTokenExpired();
@@ -31,18 +31,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
         final expiresAt = response.data['expiresAt'] as String?;
         if (newToken == null || expiresAt == null) {
           await SecureStorage.clear();
-          state = AuthState.unauthenticated;
+          state = UserState.anonymous;
           return;
         }
         await SecureStorage.saveToken(newToken, expiresAt);
-        state = AuthState.authenticated;
       } catch (_) {
         await SecureStorage.clear();
-        state = AuthState.unauthenticated;
+        state = UserState.anonymous;
+        return;
       }
-    } else {
-      state = AuthState.authenticated;
     }
+    state = await _fetchUserState();
+  }
+
+  Future<UserState> _fetchUserState() async {
+    try {
+      final response = await _dio.get(Endpoints.me);
+      final stateStr = response.data['userState'] as String?;
+      return _mapState(stateStr);
+    } catch (_) {
+      return UserState.unknown;
+    }
+  }
+
+  UserState _mapState(String? s) => switch (s) {
+    'lead' => UserState.lead,
+    'onboarding' => UserState.onboarding,
+    'unpaid' => UserState.unpaid,
+    'active' => UserState.active,
+    'past_due' => UserState.pastDue,
+    'canceled' => UserState.canceled,
+    _ => UserState.unknown,
+  };
+
+  /// Re-fetches /me and updates state.
+  Future<void> refreshState() async {
+    state = await _fetchUserState();
   }
 
   Future<bool> loginWithEmail(String email) async {
@@ -61,7 +85,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final expiresAt = response.data['expiresAt'] as String?;
       if (token == null || expiresAt == null) return false;
       await SecureStorage.saveToken(token, expiresAt);
-      state = AuthState.authenticated;
+      state = await _fetchUserState();
       return true;
     } catch (_) {
       return false;
@@ -75,7 +99,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final expiresAt = response.data['expiresAt'] as String?;
       if (token == null || expiresAt == null) return false;
       await SecureStorage.saveToken(token, expiresAt);
-      state = AuthState.authenticated;
+      state = await _fetchUserState();
       return true;
     } catch (_) {
       return false;
@@ -84,6 +108,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   Future<void> logout() async {
     await SecureStorage.clear();
-    state = AuthState.unauthenticated;
+    state = UserState.anonymous;
   }
 }

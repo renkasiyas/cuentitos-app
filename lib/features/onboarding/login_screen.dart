@@ -6,9 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../core/auth/auth_provider.dart';
-import '../../core/api/api_client.dart';
-import '../../core/api/endpoints.dart';
-import '../../core/sync/sync_provider.dart';
 import '../../theme/app_theme.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -88,7 +85,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       _error = null;
     });
     final success =
-        await ref.read(authProvider.notifier).loginWithEmail(email);
+        await ref.read(userStateProvider.notifier).loginWithEmail(email);
     if (!mounted) return;
     setState(() => _loadingEmail = false);
     if (success) {
@@ -121,27 +118,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         return;
       }
       final success =
-          await ref.read(authProvider.notifier).loginWithGoogle(idToken);
+          await ref.read(userStateProvider.notifier).loginWithGoogle(idToken);
       if (!mounted) return;
       setState(() => _loadingGoogle = false);
       if (success) {
-        try {
-          final dio = ref.read(apiClientProvider);
-          final response = await dio.get(Endpoints.me);
-          if (!mounted) return;
-          final child = response.data['child'];
-          final parent = response.data['parent'] as Map<String, dynamic>?;
-          final subscriptionStatus =
-              parent?['subscriptionStatus'] as String?;
-          if (child != null && subscriptionStatus == 'active') {
-            await ref.read(syncProvider).fullSync();
-            if (mounted) context.go('/tonight');
-          } else {
-            if (mounted) context.go('/quiz');
-          }
-        } catch (_) {
-          if (mounted) context.go('/quiz');
-        }
+        // State machine handles routing via router redirect
+        if (mounted) context.go('/tonight');
       } else {
         setState(() => _error =
             'No pudimos iniciar sesión con Google. Intenta de nuevo.');

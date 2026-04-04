@@ -12,7 +12,8 @@ final subscriptionStatusProvider = Provider<String>((ref) {
 });
 
 final isActiveSubscriberProvider = Provider<bool>((ref) {
-  return ref.watch(subscriptionStatusProvider) == 'active';
+  final status = ref.watch(subscriptionStatusProvider);
+  return status == 'active' || status == 'past_due';
 });
 
 final isPremiumProvider = Provider<bool>((ref) {

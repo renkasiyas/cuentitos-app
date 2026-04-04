@@ -262,7 +262,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: _LogoutButton(
                         onPressed: () async {
-                          await ref.read(authProvider.notifier).logout();
+                          await ref.read(userStateProvider.notifier).logout();
                           if (context.mounted) context.go('/welcome');
                         },
                       ),

@@ -12,8 +12,8 @@ final pendingActionsProvider = Provider<PendingActionsService>((ref) {
 });
 
 final appInitProvider = FutureProvider<void>((ref) async {
-  final authState = ref.watch(authProvider);
-  if (authState != AuthState.authenticated) return;
+  final userState = ref.watch(userStateProvider);
+  if (userState != UserState.active && userState != UserState.pastDue) return;
 
   final isOnline = ref.watch(connectivityProvider).value ?? false;
 

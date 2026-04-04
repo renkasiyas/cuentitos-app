@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../db/database.dart';
 import '../../providers/stories_provider.dart';
 import '../../providers/child_provider.dart';
+import '../../core/auth/auth_provider.dart';
 import '../../providers/subscription_provider.dart';
 import '../../providers/download_provider.dart';
 import '../../providers/connectivity_provider.dart';
@@ -17,7 +18,7 @@ class TonightScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isActive = ref.watch(isActiveSubscriberProvider);
+    final userState = ref.watch(userStateProvider);
     final isPremium = ref.watch(isPremiumProvider);
     final storyAsync = ref.watch(todayStoryProvider);
     final parentAsync = ref.watch(parentProfileProvider);
@@ -86,6 +87,30 @@ class TonightScreen extends ConsumerWidget {
                     ),
                   ),
 
+                // Past-due payment warning
+                if (userState == UserState.pastDue)
+                  Container(
+                    color: AppColors.warning.withAlpha(200),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Tu pago no se pudo procesar.',
+                            style: GoogleFonts.nunito(color: AppColors.skyDeep, fontSize: 13),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/settings/subscription'),
+                          child: Text(
+                            'Actualizar',
+                            style: GoogleFonts.nunito(fontWeight: FontWeight.w700, color: AppColors.skyDeep),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                 // Custom app bar area
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -107,7 +132,7 @@ class TonightScreen extends ConsumerWidget {
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(20),
-                    child: _buildBody(context, ref, isActive, isPremium, storyAsync, parentAsync),
+                    child: _buildBody(context, ref, userState, isPremium, storyAsync, parentAsync),
                   ),
                 ),
               ],
@@ -149,15 +174,16 @@ class TonightScreen extends ConsumerWidget {
   Widget _buildBody(
     BuildContext context,
     WidgetRef ref,
-    bool isActive,
+    UserState userState,
     bool isPremium,
     AsyncValue<Story?> storyAsync,
     AsyncValue<dynamic> parentAsync,
   ) {
-    if (!isActive) {
-      return _NotSubscribedState(onSubscribe: () => context.push('/tier', extra: <String, dynamic>{}));
+    if (userState == UserState.canceled) {
+      return _NotSubscribedState(onSubscribe: () => context.push('/tier'));
     }
 
+    // active and pastDue both show stories
     return storyAsync.when(
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.gold),

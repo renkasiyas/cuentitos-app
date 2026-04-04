@@ -5,9 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../theme/app_theme.dart';
 
 class TierScreen extends StatefulWidget {
-  final Map<String, dynamic> quizData;
+  final Map<String, dynamic>? quizData;
 
-  const TierScreen({super.key, required this.quizData});
+  const TierScreen({super.key, this.quizData});
 
   @override
   State<TierScreen> createState() => _TierScreenState();
@@ -38,10 +38,11 @@ class _TierScreenState extends State<TierScreen> with TickerProviderStateMixin {
   }
 
   void _continue() {
-    context.go('/checkout', extra: {
-      ...widget.quizData,
+    final data = <String, dynamic>{
+      if (widget.quizData != null) ...widget.quizData!,
       'tier': _selectedTier,
-    });
+    };
+    context.go('/checkout', extra: data);
   }
 
   @override
